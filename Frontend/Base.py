@@ -1,5 +1,5 @@
 import tkinter as tk
-import Frontend.modules.Menu as Menu  # Importar el contenido del menú Inicio
+import Frontend.modules.Menu as Menu
 
 
 class App:
@@ -21,8 +21,7 @@ class App:
 
     def NavBar(self, root):
         # Crear el frame del navbar con mayor ancho
-
-        self.navbar = tk.Frame(root, bg="#393E46", width=300)
+        self.navbar = tk.Frame(root, bg="#393E46", width=300)  # Ajusta el ancho aquí
         self.navbar.pack(side="left", fill="y")
 
         self.boton0 = tk.Button(
@@ -44,6 +43,7 @@ class App:
                 fg="white",
                 bd=0,
                 font=("Arial", 12),
+                height=3,  # Ajusta el alto del botón aquí
             )
             boton.pack(fill="x", expand=True)
             boton.bind("<Enter>", lambda e: self.on_enter(e))
@@ -67,6 +67,17 @@ class App:
         if texto == "Inicio":
             Menu.mostrar_contenido(self.main_frame)
         elif texto == "Acerca de":
-            """self.mostrar_acerca_de()"""
+            self.mostrar_acerca_de()
         elif texto == "Salir":
             self.root.quit()
+
+    def mostrar_acerca_de(self):
+        # Limpiar el frame
+        for widget in self.main_frame.winfo_children():
+            widget.destroy()
+
+        # Añadir contenido al frame
+        label = tk.Label(
+            self.main_frame, text="Contenido del menú Acerca de", font=("Arial", 16)
+        )
+        label.pack(pady=20)
