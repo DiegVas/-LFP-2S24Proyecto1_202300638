@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Depurador de Python: Archivo actual",
+      "name": "Depurador de Proyecto",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/main.py",
