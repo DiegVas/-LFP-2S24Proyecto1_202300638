@@ -1,183 +1,186 @@
-module analizador_mod
-    implicit none
-contains
-    ! Subrutina para obtener el siguiente token de una línea
-    subroutine obtener_token(linea, posicion, token)
-        implicit none
-        character(*), intent(in) :: linea
-        integer, intent(inout) :: posicion
-        character(:), allocatable, intent(out) :: token
-        integer :: len_linea, inicio, fin
-        character :: c
-
-        len_linea = len(linea)
-        token = ''
-        inicio = posicion
-
-        ! Saltar espacios en blanco
-        do while (posicion <= len_linea)
-            c = linea(posicion:posicion)
-            if (c /= ' ' .and. c /= char(9)) exit
-            posicion = posicion + 1
-        end do
-
-        if (posicion > len_linea) then
-            token = ''
-            return
-        end if
-
-        c = linea(posicion:posicion)
-
-        ! Si es un símbolo simple
-        if (c == '{' .or. c == '}' .or. c == ':' .or. c == ';') then
-            allocate(character(1) :: token)
-            token = c
-            posicion = posicion + 1
-            return
-        end if
-
-        ! Si es una cadena entre comillas
-        if (c == '"') then
-            inicio = posicion
-            posicion = posicion + 1
-            do while (posicion <= len_linea)
-                c = linea(posicion:posicion)
-                if (c == '"') then
-                    posicion = posicion + 1
-                    exit
-                end if
-                posicion = posicion + 1
-            end do
-            fin = posicion - 1
-            allocate(character(fin - inicio + 1) :: token)
-            token = linea(inicio:fin)
-            return
-        end if
-
-        ! Para palabras y números
-        inicio = posicion
-        do while (posicion <= len_linea)
-            c = linea(posicion:posicion)
-            if (c == ' ' .or. c == '{' .or. c == '}' .or. c == ':' .or. c == ';') exit
-            posicion = posicion + 1
-        end do
-        fin = posicion - 1
-        allocate(character(fin - inicio + 1) :: token)
-        token = linea(inicio:fin)
-
-    end subroutine obtener_token
-
-    ! Función que verifica si un token es una cadena
-    logical function es_cadena(token)
-        implicit none
-        character(*), intent(in) :: token
-        integer :: len_token
-        len_token = len_trim(token)
-        es_cadena = .false.
-        if (len_token >= 2) then
-            if (token(1:1) == '"' .and. token(len_token:len_token) == '"') then
-                es_cadena = .true.
-            end if
-        end if
-    end function es_cadena
-
-    ! Función que verifica si un token es un entero
-    logical function es_entero(token)
-        implicit none
-        character(*), intent(in) :: token
-        integer :: valor, iostat
-        read(token, *, iostat=iostat) valor
-        es_entero = (iostat == 0)
-    end function es_entero
-
-    ! Función que verifica si un token es un porcentaje
-    logical function es_porcentaje(token)
-        implicit none
-        character(*), intent(in) :: token
-        integer :: len_token, valor, iostat
-        len_token = len_trim(token)
-        es_porcentaje = .false.
-        if (len_token >= 2) then
-            if (token(len_token:len_token) == '%') then
-                read(token(1:len_token-1), *, iostat=iostat) valor
-                if (iostat == 0) then
-                    es_porcentaje = .true.
-                end if
-            end if
-        end if
-    end function es_porcentaje
-
-end module analizador_mod
-
-program automata_dinamico
-    use analizador_mod
+program leer_archivo
+    use token_module
     implicit none
 
-    ! Variables
-    character(:), allocatable :: linea, token
-    integer :: estado, posicion, iostat
-    integer :: len_linea
+    ! * Declaración de variables
 
-    ! Definir estados
-    integer, parameter :: INICIO = 0, DENTRO_GRAFICA = 1, ESPERA_CONTINENTE = 2
-    integer, parameter :: DENTRO_CONTINENTE = 3, DENTRO_PAIS = 4, ESPERA_ATRIBUTOS = 5
-    integer, parameter :: ERROR = -1
+    ! Variables para el manejo de archivos
+    integer :: unidad, iostat, longitud, k 
+    character(len=1000) :: buffer
 
-    ! Inicializar el estado
-    estado = INICIO
+    ! Variables para el manejo de la cadena
+    character(len=:), allocatable :: contenido
+    character(len=1) :: charLinea
 
-    ! Abrir archivo de entrada
-    open(unit=10, file='entrada.org', status='old', action='read', iostat=iostat)
+    ! Variables para el análisis léxico
+    integer :: state, token_Index, token_capacity
+    character(len=100) :: current_lexema
+
+    ! Variables para el manejo de tokens
+    type(token), allocatable :: tokens(:)
+
+    ! Variables para el análisis léxico
+    character(len=100) :: lexema
+    integer :: linea_actual, columna_actual
+    character(len=1), parameter :: relevant_chars(4) = [char(123), char(125), char(46), char(58)]
+    character(len=10), parameter :: reserved_words(7) = ['grafica   ', 'nombre    ', 'continente', 'pais      ', 'poblacion ', 'saturacion', 'bandera   ']
+
+    ! * Inicializar variables
+    state = 0
+    current_lexema = ''
+    token_Index = 0
+    token_capacity = 100  ! ? Tamaño inicial del arreglo de tokens
+    unidad = 10 ! ? Asignar un número de unidad para el archivo
+    contenido = '' ! ? Inicializar la cadena de contenido
+    allocate(tokens(token_capacity)) ! ? Inicializar el arreglo de tokens
+    k = 1 ! ? Inicializar el índice de la cadena
+
+
+    ! * Abrir el archivo en modo de lectura
+
+    open(unit=unidad, file='./test/Prueba.org', status='old', action='read', iostat=iostat)
     if (iostat /= 0) then
-        print *, 'Error al abrir el archivo de entrada.'
+        print *, 'Error al abrir el archivo.'
         stop
     end if
 
-    ! Leer el archivo línea por línea
+
+    ! * Leer todo el contenido del archivo en una sola cadena
+
     do
-        ! Leer una línea completa de longitud variable
-        read(10, '(A)', iostat=iostat) linea
-        if (iostat /= 0) exit  ! Salir del bucle si llegamos al final del archivo
-
-        ! Remover espacios iniciales y finales
-        linea = adjustl(linea)
-        linea = trim(linea)
-        len_linea = len(linea)
-
-        ! Inicializar posición al inicio de la línea
-        posicion = 1
-
-        ! Procesar la línea si no está vacía
-        if (len_linea > 0) then
-            do while (posicion <= len_linea)
-                call obtener_token(linea, posicion, token)
-
-                if (len(token) == 0) exit  ! No hay más tokens en esta línea
-
-                ! Analizar el token según el estado actual
-                select case (estado)
-                case (INICIO)
-                    if (token == 'grafica') then
-                        estado = DENTRO_GRAFICA
-                    else
-                        estado = ERROR
-                        print *, 'Error: Se esperaba ''grafica''.'
-                        exit
-                    end if
-                ! Continuar el análisis con el resto de los casos como antes...
-
-                end select
-
-            end do
-        end if
+        read(unit=unidad, fmt='(A)', iostat=iostat) buffer
+        if (iostat /= 0) exit
+        contenido = trim(contenido) // trim(buffer) // char(10)
     end do
 
-    ! Cerrar archivo
-    close(10)
+    ! Guardar el tamaño de la cadena
+    longitud = len_trim(contenido)
 
-    ! Verificar si el análisis fue exitoso
-    if (estado /= ERROR) then
-        print *, 'Análisis completado con éxito.'
-    end if
+    ! ! Cerrar el archivo
+    close(unit=unidad)
 
-end program automata_dinamico
+
+
+    ! * Recorrer el contenido del archivo
+
+    do while (k <= longitud)
+
+        ! ? Obtener el carácter actual
+        charLinea = contenido(k:k)
+
+        select case (state)
+            case (0) ! * Estado inicial
+                if (charLinea == char(10)) then
+                    ! ! Salto de linea
+
+                    linea_actual = linea_actual + 1
+                    columna_actual = 1
+                    
+                else if (charLinea >= 'a' .and. charLinea <= 'z') then
+                    ! ! Iniciar un identificador
+
+                    state = 1
+                    current_lexema = charLinea
+                else if (any(charLinea == relevant_chars)) then
+                    ! ! Iniciar un símbolo
+
+                    state = 2
+                    current_lexema = charLinea
+                else if (charLinea == ' ') then
+                    ! ! Ignorar espacios
+
+                else
+                    ! ! Error de lexema
+                    print *, 'Error de lexema: ', charLinea
+                end if
+
+            case (1) ! * Estado de identificador
+                if (charLinea >= 'a' .and. charLinea <= 'z') then
+                    ! ! Continuar con el identificador
+                    current_lexema = trim(current_lexema) // charLinea
+                else
+                    ! ? Guardar el token
+
+                    call resize_tokens(token_Index, token_capacity, tokens)
+                    ! ? Verificar si es una palabra reservada
+
+                        if (any(current_lexema == reserved_words)) then
+                            lexema = 'Palabra reservada'
+                        else
+                            lexema = 'Identificador'
+                        end if
+
+                        call save_token(token_Index, tokens, trim(lexema), current_lexema, linea_actual, columna_actual)
+                        print *, trim(lexema), ": ", current_lexema
+
+                    ! ! Reiniciar el estado
+                    state = 0
+                    k = k - 1  ! Retroceder un carácter para reevaluar
+                end if
+            case (2)
+                ! ? Procesar el símbolo encontrado
+                call resize_tokens(token_Index, token_capacity, tokens)
+                call save_token(token_Index, tokens, 'Simbolo', current_lexema, linea_actual, linea_actual)
+                print *, 'Simbolo: ', current_lexema
+
+                ! ! Reiniciar el estado
+                state = 0
+
+        end select
+
+        ! ? Avanzar al siguiente carácter
+        k = k + 1
+        columna_actual = columna_actual + 1
+    end do
+
+    ! Liberar la memoria del arreglo
+    if (allocated(tokens)) deallocate(tokens)
+
+end program leer_archivo
+
+
+
+! * Adminstracion de tokens
+
+module token_module
+    implicit none
+    type :: token
+        character(len=100) :: tipo
+        character(len=100) :: lexema
+        integer :: row
+        integer :: col
+    end type token
+contains
+    subroutine resize_tokens(token_Index, token_capacity, tokens)
+        implicit none
+        integer, intent(inout) :: token_Index
+        integer, intent(inout) :: token_capacity
+        type(token), allocatable, intent(inout) :: tokens(:)
+        type(token), allocatable :: temp_tokens(:)
+
+        token_Index = token_Index + 1
+        if (token_Index > token_capacity) then
+            token_capacity = token_capacity * 2
+            allocate(temp_tokens(token_capacity))
+            temp_tokens(1:token_Index-1) = tokens
+            deallocate(tokens)
+            allocate(tokens(token_capacity))
+            tokens(1:token_Index-1) = temp_tokens(1:token_Index-1)
+            deallocate(temp_tokens)
+        end if
+    end subroutine resize_tokens
+
+    subroutine save_token(token_Index, tokens, tipo, lexema, row, col)
+        implicit none
+        integer, intent(in) :: token_Index
+        type(token), allocatable, intent(inout) :: tokens(:)
+        character(len=*), intent(in) :: tipo, lexema
+        integer, intent(in) :: row, col
+
+        tokens(token_Index)%tipo = tipo
+        tokens(token_Index)%lexema = trim(lexema)
+        tokens(token_Index)%row = row
+        tokens(token_Index)%col = col
+    end subroutine save_token
+
+end module token_module
