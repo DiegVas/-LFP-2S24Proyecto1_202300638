@@ -1,5 +1,7 @@
 program leer_archivo
     use token_module
+    use grafica_datos
+    use GraphTypes
     implicit none
 
     ! * Declaración de variables
@@ -43,22 +45,15 @@ program leer_archivo
     k = 1 ! ? Inicializar el índice de la cadena
 
 
-    ! * Abrir el archivo en modo de lectura
-
-    open(unit=unidad, file='./test/Prueba.org', status='old', action='read', iostat=iostat)
-    if (iostat /= 0) then
-        ! print *, 'Error al abrir el archivo.'
-        stop
-    end if
-
-
     ! * Leer todo el contenido del archivo en una sola cadena
 
     do
-        read(unit=unidad, fmt='(A)', iostat=iostat) buffer
+        read(*, '(A)', iostat=iostat) buffer
         if (iostat /= 0) exit
         contenido = trim(contenido) // trim(buffer) // char(10)
     end do
+
+
 
     ! Guardar el tamaño de la cadena
     longitud = len_trim(contenido)
@@ -247,11 +242,11 @@ program leer_archivo
     end do
 
     call generate_html(tokens, token_Index, errors, error_Index)
+    call leer_grafica_datos(contenido)
 
     ! Liberar la memoria del arreglo
     if (allocated(tokens)) deallocate(tokens)
     if (allocated(errors) ) deallocate(errors)
-
 
 contains
 
@@ -314,7 +309,6 @@ subroutine generate_html(tokens, token_count, errors, error_count)
 
     close(10)
 end subroutine generate_html
-
 
 
 end program leer_archivo

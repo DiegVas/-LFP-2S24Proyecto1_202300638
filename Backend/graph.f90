@@ -1,105 +1,174 @@
-program parse_org_file
-    implicit none
-    character(len=1000) :: line
-    character(len=1000), allocatable :: file_content(:)
-    integer :: i, num_lines, unit, ios
-    type :: Country
-        character(len=50) :: name
-        integer :: population
-        integer :: saturation
-        character(len=100) :: flag
-    end type Country
-
-    type :: Continent
-        character(len=50) :: name
-        type(Country), allocatable :: countries(:)
-    end type Continent
-
-    type(Continent), allocatable :: continents(:)
-
-    ! Open the file and read its content
-    open(unit=10, file='Prueba.org', status='old', action='read')
-    num_lines = 0
-    do
-        read(10, '(A)', iostat=ios) line
-        if (ios /= 0) exit
-        num_lines = num_lines + 1
-    end do
-    rewind(10)
-    allocate(file_content(num_lines))
-    do i = 1, num_lines
-        read(10, '(A)', iostat=ios) file_content(i)
-        if (ios /= 0) exit
-    end do
-    close(10)
-
-    ! Parse the content
-    call parse_content(file_content, num_lines, continents)
-
-    ! Print the structured information
-    call print_data(continents)
-
+module grafica_datos
+  use GraphTypes
+  
 contains
 
-    subroutine parse_content(file_content, num_lines, continents)
-        character(len=1000), intent(in) :: file_content(:)
-        integer, intent(in) :: num_lines
-        type(Continent), allocatable, intent(out) :: continents(:)
-        integer :: i, j, k, num_continents, num_countries, ios
-        character(len=1000) :: line
-        logical :: in_continent, in_country
-        character(len=50) :: temp_str
-        type(Continent), allocatable :: temp_continents(:)
+  subroutine leer_grafica_datos(contenido)
+    implicit none
+      type(Graph) :: graphFile
+      character(len=:), allocatable :: contenido
+      type(Country) :: country_select
+      integer :: iostat,num_continentes, num_paises, pos, i
+      real :: menor_saturacion
+      character(len=200) :: linea
+      character(len=5) :: saturacion, poblacion
+      logical :: volver_a_leer
 
-        num_continents = 0
-        in_continent = .false.
-        in_country = .false.
+      ! Inicializar variables
+      num_continentes = 0
+      volver_a_leer = .false.
 
-        do i = 1, num_lines
-            line = adjustl(file_content(i))
-            if (index(line, 'continente {') > 0) then
-                num_continents = num_continents + 1
-                in_continent = .true.
-                in_country = .false.
-                allocate(temp_continents(num_continents))
-                if (num_continents > 1) then
-                    temp_continents(1:num_continents-1) = continents
-                    deallocate(continents)
-                end if
-                temp_continents(num_continents)%name = trim(adjustl(file_content(i+1)(10:)))
-                num_countries = 0
-                continents = temp_continents
-            else if (index(line, 'pais: {') > 0 .and. in_continent) then
-                num_countries = num_countries + 1
-                in_country = .true.
-                allocate(continents(num_continents)%countries(num_countries))
-                read(file_content(i+1), '(A)', iostat=ios) line
-                if (ios == 0) continents(num_continents)%countries(num_countries)%name = trim(adjustl(line(10:)))
-                read(file_content(i+2), '(A)', iostat=ios) line
-                if (ios == 0) read(trim(adjustl(line(12:))), *, iostat=ios) continents(num_continents)%countries(num_countries)%population
-                if (ios /= 0) print *, 'Error reading population at line ', i+2
-                read(file_content(i+3), '(A)', iostat=ios) line
-                if (ios == 0) read(trim(adjustl(line(14:))), *, iostat=ios) continents(num_continents)%countries(num_countries)%saturation
-                if (ios /= 0) print *, 'Error reading saturation at line ', i+3
-                read(file_content(i+4), '(A)', iostat=ios) line
-                if (ios == 0) continents(num_continents)%countries(num_countries)%flag = trim(adjustl(line(11:)))
+    ! Abrimos el archivo para leer
+
+    ! Leemos linea por linea
+    do
+      if (.not. volver_a_leer) then
+      read(contenido, '(A)', iostat=iostat) linea
+      if (iostat /= 0) exit 
+      else
+        volver_a_leer = .false.
+      end if
+
+      ! Leemos el nombre de la gráfica
+      if (index(linea, 'grafica:') > 0) then
+      do
+          read(contenido, '(A)', iostat=iostat) linea
+          if (iostat /= 0) exit
+          if (index(linea, 'nombre:') > 0) then
+            call extraer_valor(linea, graphFile%name)
+            exit
+          endif
+        end do
+      endif
+
+      ! Leemos los nombres de los continentes
+      if (index(linea, 'continente') > 0) then
+        num_continentes = num_continentes + 1
+        if (.not. allocated(graphFile%continents)) then
+          allocate(graphFile%continents(num_continentes))
+        else
+          call redimensionar_arreglo(graphFile%continents, num_continentes)
+        endif
+        
+        do
+          read(contenido, '(A)', iostat=iostat) linea
+          if (iostat /= 0) exit
+          if (index(linea, 'nombre:') > 0) then
+            call extraer_valor(linea, graphFile%continents(num_continentes)%name)
+            exit
+          end if
+
+        end do
+
+        ! inicializar el numero de paises
+        num_paises = 0
+
+        ! Leemos los nombres de los paises
+        do
+          read(contenido, '(A)', iostat=iostat) linea
+          if (iostat /= 0 .or. index(linea, 'continente') > 0) then
+            volver_a_leer = .true.
+            exit
+          end if
+          if (index(linea, 'pais') > 0) then
+            num_paises = num_paises + 1
+            if (.not. allocated(graphFile%continents(num_continentes)%countries)) then
+              allocate(graphFile%continents(num_continentes)%countries(num_paises))
+            else
+              call redimensionar_arreglo_country(graphFile%continents(num_continentes)%countries, num_paises)
             end if
-        end do
-    end subroutine parse_content
 
-    subroutine print_data(continents)
-        type(Continent), intent(in) :: continents(:)
-        integer :: i, j
-
-        do i = 1, size(continents)
-            print *, 'Continente: ', trim(continents(i)%name)
-            do j = 1, size(continents(i)%countries)
-                print *, '  País: ', trim(continents(i)%countries(j)%name)
-                print *, '    Población: ', continents(i)%countries(j)%population
-                print *, '    Saturación: ', continents(i)%countries(j)%saturation, '%'
-                print *, '    Bandera: ', trim(continents(i)%countries(j)%flag)
+            do
+              read(contenido, '(A)', iostat=iostat) linea
+              if (iostat /= 0) exit
+              if (index(linea, 'nombre:') > 0) then
+                call extraer_valor(linea, graphFile%continents(num_continentes)%countries (num_paises)%name)
+              else if (index(linea, 'poblacion:')>0) then
+                call extraer_valor(linea, poblacion)
+                read(poblacion, *) graphFile%continents(num_continentes)%countries(num_paises)%population
+              else if (index(linea, 'saturacion:')>0) then
+                call extraer_valor(linea, saturacion)
+                if (index(saturacion, '%')>0) then
+                  saturacion = saturacion(1:len_trim(saturacion)-1)
+                endif
+                read(saturacion, *) graphFile%continents(num_continentes)%countries(num_paises)%saturation
+              else if (index(linea, 'bandera:')>0) then
+                call extraer_valor(linea, graphFile%continents(num_continentes)%countries(num_paises)%flag)
+              else
+                exit
+              endif
             end do
+          end if
         end do
-    end subroutine print_data
 
-end program parse_org_file
+      endif
+    end do
+
+
+    menor_saturacion = 1.0e30  ! Un valor muy grande para empezar
+
+    ! Recorrer todos los continentes y países para encontrar el país con la menor saturación
+    do pos = 1, num_continentes
+      do i = 1, size(graphFile%continents(pos)%countries)
+        if (graphFile%continents(pos)%countries(i)%saturation < menor_saturacion) then
+          menor_saturacion = graphFile%continents(pos)%countries(i)%saturation
+          country_select = graphFile%continents(pos)%countries(i)
+        endif
+      end do
+    end do
+
+    print *, trim("") // "," // trim(adjustl(itoa(country_select%population))) // "," // trim(country_select%name) // "," // trim(country_select%flag)
+
+  end subroutine leer_grafica_datos
+
+  function itoa(i) result(str)
+    implicit none
+    integer, intent(in) :: i
+    character(len=12) :: str
+    write(str, '(I0)') i
+  end function itoa
+
+  subroutine extraer_valor(linea, valor)
+    character(len=*), intent(in) :: linea
+    character(len=*), intent(out) :: valor
+    integer :: pos
+
+    pos = index(linea, ':') + 1
+    valor = adjustl(trim(linea(pos:)))
+    ! Remover el punto y coma al final si existe
+    if (valor(len_trim(valor):len_trim(valor)) == ';') then
+      valor = valor(1:len_trim(valor)-1)
+    endif
+    ! Remover las comillas si existen
+    if (valor(1:1) == '"' .and. valor(len_trim(valor):len_trim(valor)) == '"') then
+      valor = valor(2:len_trim(valor)-1)
+    endif
+
+  end subroutine extraer_valor
+
+  subroutine redimensionar_arreglo(arreglo, nuevo_tamano)
+    type(Continent), dimension(:), allocatable :: arreglo
+    integer, intent(in) :: nuevo_tamano
+    type(Continent), dimension(:), allocatable :: temp
+
+    allocate(temp(nuevo_tamano))
+    temp(1:size(arreglo)) = arreglo
+    call move_alloc(temp, arreglo)
+  end subroutine redimensionar_arreglo
+
+  subroutine redimensionar_arreglo_country(arreglo, nuevo_tamano)
+    type(Country), dimension(:), allocatable :: arreglo
+    integer, intent(in) :: nuevo_tamano
+    type(Country), dimension(:), allocatable :: temp
+
+    allocate(temp(nuevo_tamano))
+    temp(1:size(arreglo)) = arreglo
+    call move_alloc(temp, arreglo)
+  end subroutine redimensionar_arreglo_country
+
+  subroutine graphiv_Process(dataFile)
+    type(Graph) :: dataFile
+    ! Aquí va el código de la función graphiv_Process
+  end subroutine graphiv_Process
+
+end module grafica_datos

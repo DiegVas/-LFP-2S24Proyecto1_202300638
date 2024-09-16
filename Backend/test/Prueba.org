@@ -1,7 +1,7 @@
 grafica: {
   nombre: "nombre de grafico";
   continente {
-    nombre: "Asia";
+    nombre: "asia";
     pais: {
       nombre: "Japon";
       poblacion: 2352342;

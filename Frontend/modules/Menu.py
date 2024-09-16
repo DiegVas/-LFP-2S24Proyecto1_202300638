@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
+import subprocess
+import os
 
 
 def mostrar_contenido(frame):
@@ -43,6 +45,25 @@ def mostrar_contenido(frame):
                 text_input.insert(tk.END, content)
             file_path.set(path)
 
+    # Funcion para enviar el contenido a un ejecutable de fortran
+    def enviar_contenido():
+        contenido = text_input.get(1.0, tk.END)
+        try:
+            # Ruta relativa al ejecutable Fortran
+            exe_path = os.path.join(
+                os.path.dirname(__file__), "../../backend/analyzer.exe"
+            )
+            # Ejecutar el archivo Fortran con el contenido como entrada
+            result = subprocess.run(
+                [exe_path],
+                input=contenido,
+                text=True,
+                capture_output=True,
+            )
+            messagebox.showinfo("Resultado", result.stdout)
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+
     # Función para guardar archivo
     def guardar_archivo():
         if not file_path.get():
@@ -80,6 +101,11 @@ def mostrar_contenido(frame):
 
     # Crear el botón "Analizar" más grande y resaltado
     btn_analizar = tk.Button(
-        frame, text="Analizar", font=("Arial", 12, "bold"), bg="yellow", width=20
+        frame,
+        text="Analizar",
+        font=("Arial", 12, "bold"),
+        bg="yellow",
+        width=20,
+        command=enviar_contenido,
     )
     btn_analizar.pack(pady=10)
