@@ -242,7 +242,9 @@ program leer_archivo
     end do
 
     call generate_html(tokens, token_Index, errors, error_Index)
-    call leer_grafica_datos(contenido)
+    if ( error_count == 0 ) then
+        call leer_grafica_datos(contenido)
+    end if
 
     ! Liberar la memoria del arreglo
     if (allocated(tokens)) deallocate(tokens)

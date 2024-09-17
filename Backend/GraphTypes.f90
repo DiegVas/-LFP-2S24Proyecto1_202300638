@@ -10,6 +10,7 @@ module graphTypes
 
     type :: Continent
         character(len=50) :: name
+        real :: saturation_Continent
         type(Country), dimension(:), allocatable :: countries
     end type Continent
 

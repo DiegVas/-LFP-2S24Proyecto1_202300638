@@ -30,6 +30,16 @@ def mostrar_contenido(frame):
     button_frame = tk.Frame(frame)
     button_frame.pack(pady=10)
 
+    # Crear Labels para mostrar los resultados
+    label_poblacion = tk.Label(frame, text="Población: ")
+    label_poblacion.pack()
+
+    label_nombre = tk.Label(frame, text="Nombre: ")
+    label_nombre.pack()
+
+    label_bandera = tk.Label(frame)
+    label_bandera.pack()
+
     # Variables para almacenar la ruta del archivo actual
     file_path = tk.StringVar()
 
@@ -61,6 +71,22 @@ def mostrar_contenido(frame):
                 capture_output=True,
             )
             messagebox.showinfo("Resultado", result.stdout)
+            salida = result.stdout.strip()
+            partes = salida.split(",")
+
+            if len(partes) == 4:
+                # Mostrar los valores en los Labels correspondientes
+                label_poblacion.config(text="Población: " + partes[1])
+                label_nombre.config(text="Nombre: " + partes[2])
+
+                # Mostrar la imagen en un Label
+                imagen_path = partes[3].strip()
+                imagen = tk.PhotoImage(file=imagen_path)
+                label_bandera.config(image=imagen)
+                label_bandera.image = (
+                    imagen  # Guardar referencia para evitar que se borre la imagen
+                )
+
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
