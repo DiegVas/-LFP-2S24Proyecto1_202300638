@@ -6,13 +6,13 @@ grafica: {
       nombre: "Japon";
       poblacion: 2352342;
       saturacion: 80%;
-      bandera:"C:\Users\HP\Downloads\imagen.jpg"
+      bandera:"C:/Users/HP/Downloads/LogoB2.png"
     }
     pais: {
       nombre: "China";
       poblacion: 1350000000;
       saturacion: 95%;
-      bandera:"C:\Users\HP\Downloads\imagen.jpg"
+      bandera:"C:/Users/HP/Downloads/LogoB2.png"
     }
     pais: {
       nombre: "Korea";
@@ -30,7 +30,7 @@ grafica: {
       nombre: "Canadá";
       poblacion: 23423423;
       saturacion: 65%;
-      bandera:"C:\Users\HP\Downloads\imagen.jpg"
+      bandera:"C:/Users/HP/Downloads/LogoB2.png"
     }
     pais: {
       nombre: "Guatemala";
@@ -42,7 +42,7 @@ grafica: {
       nombre: "Chile";
       poblacion: 235234234;
       saturacion: 60%;
-      bandera:"C:\Users\HP\Downloads\imagen.jpg"
+      bandera:"C:/Users/HP/Downloads/LogoB2.png"
     }
   }
 }

@@ -132,12 +132,20 @@ contains
       end do
     end do
 
-    do pos = 1 , num_continentes
-      do i = 1, size(graphFile%continents(pos)%countries)
-        graphFile%continents(pos)%saturation_Continent = graphFile%continents(pos)%saturation_Continent + graphFile%continents(pos)%countries(i)%saturation
-      end do
-      graphFile%continents(pos)%saturation_Continent = graphFile%continents(pos)%saturation_Continent / size(graphFile%continents(pos)%countries)
-    end do
+do pos = 1 , num_continentes
+  graphFile%continents(pos)%saturation_Continent = 0.0  ! Inicializar la saturación del continente
+  do i = 1, size(graphFile%continents(pos)%countries)
+    ! Redondear el valor de saturación a 3 decimales
+    graphFile%continents(pos)%countries(i)%saturation = nint(graphFile%continents(pos)%countries(i)%saturation * 1000.0) / 1000.0
+   ! Sumar el valor redondeado a la saturación del continente
+    graphFile%continents(pos)%saturation_Continent = graphFile%continents(pos)%saturation_Continent + graphFile%continents(pos)%countries(i)%saturation
+  end do
+  print *, graphFile%continents(pos)%saturation_Continent
+  ! Calcular la saturación promedio del continente
+  graphFile%continents(pos)%saturation_Continent = graphFile%continents(pos)%saturation_Continent / size(graphFile%continents(pos)%countries)
+end do
+
+    call graphiv_Process(graphFile, num_continentes, num_paises)
 
     print *, trim("") // "," // trim(adjustl(itoa(country_select%population))) // "," // trim(country_select%name) // "," // trim(country_select%flag)
 
@@ -178,6 +186,23 @@ contains
     call move_alloc(temp, arreglo)
   end subroutine redimensionar_arreglo
 
+  function eliminar_espacios(cadena) result(cadena_sin_espacios)
+  implicit none
+  character(len=*), intent(in) :: cadena
+  character(len=len(cadena)) :: cadena_sin_espacios
+  integer :: i, j
+
+  j = 1
+  do i = 1, len(cadena)
+    if (cadena(i:i) /= ' ') then
+      cadena_sin_espacios(j:j) = cadena(i:i)
+      j = j + 1
+    end if
+  end do
+
+  cadena_sin_espacios = adjustl(cadena_sin_espacios(1:j-1))
+end function eliminar_espacios
+
   subroutine redimensionar_arreglo_country(arreglo, nuevo_tamano)
     type(Country), dimension(:), allocatable :: arreglo
     integer, intent(in) :: nuevo_tamano
@@ -188,8 +213,73 @@ contains
     call move_alloc(temp, arreglo)
   end subroutine redimensionar_arreglo_country
 
-  subroutine graphiv_Process(dataFile)
+  function real_to_char(num) result(char_rep)
+        implicit none
+        real, intent(in) :: num          ! Número real de entrada
+        character(len=32) :: char_rep    ! Resultado como cadena de caracteres
+        write(char_rep, '(F10.3)') num   ! Escribe el número en formato de cadena
+  end function real_to_char
+
+  subroutine graphiv_Process(dataFile, num_continentes, num_paises)
     type(Graph) :: dataFile
+    integer :: num_continentes, num_paises, i, j
+    character(len=5000) :: dot_code
+    character(len=10) :: saturacion, saturacion_pais
+    character(len=10) :: color
+    real :: saturacion_real, saturacion_pais_real
+
+    dot_code = "digraph G {" // new_line('A') // 'node [shape=box, style=filled, fontname="Arial"];' // new_line('A')
+
+    do i = 1 , num_continentes
+      saturacion_real = dataFile%continents(i)%saturation_Continent
+      write(saturacion, '(F10.3)') saturacion_real
+        if (dataFile%continents(i)%saturation_Continent < 15) then
+      color = "white"
+    else if (dataFile%continents(i)%saturation_Continent < 30) then
+      color = "blue"
+    else if (dataFile%continents(i)%saturation_Continent < 45) then
+      color = "green"
+    else if (dataFile%continents(i)%saturation_Continent < 60) then
+      color = "yellow"
+    else if (dataFile%continents(i)%saturation_Continent < 75) then
+      color = "orange"
+    else
+      color = "red"
+    end if
+     saturacion = real_to_char(saturacion_real)
+     print *, saturacion
+      dot_code = trim(dot_code) // trim(dataFile%continents(i)%name) // ' [label="' // trim(dataFile%continents(i)%name) // '\n' // saturacion // '" , fillcolor=' // color // '];' // new_line('A')
+      dot_code = trim(dot_code) // eliminar_espacios(trim(dataFile%name)) // "->" // trim(dataFile%continents(i)%name) // new_line('A')
+      do j = 1, num_paises
+      saturacion_pais_real = dataFile%continents(i)%countries(j)%saturation
+    if (dataFile%continents(i)%countries(j)%saturation < 15) then
+      color = "white"
+    else if (dataFile%continents(i)%countries(j)%saturation < 30) then
+      color = "blue"
+    else if (dataFile%continents(i)%countries(j)%saturation < 45) then
+      color = "green"
+    else if (dataFile%continents(i)%countries(j)%saturation < 60) then
+      color = "yellow"
+    else if (dataFile%continents(i)%countries(j)%saturation < 75) then
+      color = "orange"
+    else
+      color = "red"
+    end if
+     saturacion_pais = real_to_char(saturacion_pais_real)
+      dot_code = trim(dot_code) // trim(dataFile%continents(i)%countries(j)%name)// ' [label="' // trim(dataFile%continents(i)%countries(j)%name) // '\n' // saturacion_pais // '" , fillcolor=' // color //'];' // new_line('A')
+      dot_code = trim(dot_code) // trim(dataFile%continents(i)%name) // "->" // trim(dataFile%continents(i)%countries(j)%name) // new_line('A')
+      end do
+    end do
+    dot_code = trim(dot_code) // '}' // new_line('A')
+
+
+    open(unit=11, file="automata.dot", status='replace')
+    write(11, '(A)') trim(dot_code)
+    close(11)
+
+    !  Llamar a Graphviz para crear la imagen PNG
+    call system("dot -Tpng automata.dot -o automata.png")
+
     ! Aquí va el código de la función graphiv_Process
   end subroutine graphiv_Process
 

@@ -14,9 +14,13 @@ def mostrar_contenido(frame):
     label = tk.Label(frame, text="Contenido del menú Inicio", font=("Arial", 16))
     label.pack(pady=20)
 
+    # Crear un frame para los labels, input y botón analizar
+    input_frame = tk.Frame(frame)
+    input_frame.pack(pady=10)
+
     # Crear un Text widget grande con borde negro y padding interno
     text_input = tk.Text(
-        frame,
+        input_frame,
         height=10,
         width=50,
         highlightbackground="black",
@@ -24,21 +28,24 @@ def mostrar_contenido(frame):
         padx=10,
         pady=10,
     )
-    text_input.pack(pady=10)
+    text_input.grid(row=0, column=0, pady=10)
 
     # Crear un frame para los primeros tres botones
     button_frame = tk.Frame(frame)
     button_frame.pack(pady=10)
 
     # Crear Labels para mostrar los resultados
-    label_poblacion = tk.Label(frame, text="Población: ")
-    label_poblacion.pack()
+    label_poblacion = tk.Label(input_frame, text="Población: ")
+    label_poblacion.grid(row=0, column=1)
 
-    label_nombre = tk.Label(frame, text="Nombre: ")
-    label_nombre.pack()
+    label_nombre = tk.Label(input_frame, text="Nombre: ")
+    label_nombre.grid(row=0, column=1)
 
-    label_bandera = tk.Label(frame)
-    label_bandera.pack()
+    label_bandera = tk.Label(input_frame)
+    label_bandera.grid(row=0, column=1)
+
+    label_grafica = tk.Label(input_frame)
+    label_grafica.grid(row=1, column=1)
 
     # Variables para almacenar la ruta del archivo actual
     file_path = tk.StringVar()
@@ -86,6 +93,10 @@ def mostrar_contenido(frame):
                 label_bandera.image = (
                     imagen  # Guardar referencia para evitar que se borre la imagen
                 )
+                imagen_path_graph = "automata.png"
+                imagen_graph = tk.PhotoImage(file=imagen_path_graph)
+                label_grafica.config(image=imagen_graph)
+                label_grafica.image = imagen_graph  # Guardar referencia para evitar que se borre la imagen
 
         except Exception as e:
             messagebox.showerror("Error", str(e))

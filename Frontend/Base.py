@@ -1,10 +1,11 @@
 import tkinter as tk
 import Frontend.modules.Menu as Menu
+from tkinter import messagebox
 
 
 class App:
 
-    WIDTH = 800
+    WIDTH = 1200
     HEIGHT = 500
 
     def __init__(self, root):
@@ -76,8 +77,8 @@ class App:
         for widget in self.main_frame.winfo_children():
             widget.destroy()
 
-        # Añadir contenido al frame
-        label = tk.Label(
-            self.main_frame, text="Contenido del menú Acerca de", font=("Arial", 16)
+        # Mostrar mensaje
+        messagebox.showinfo(
+            "Estudiante: Diego Alejandro Vásquez Alonzo\n",
+            "Carné: 202300638\nCurso: Lenguajes Formales y de Programación\nSección: B+",
         )
-        label.pack(pady=20)

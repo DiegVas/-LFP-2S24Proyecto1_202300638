@@ -1,0 +1,20 @@
+digraph G {
+node [shape=box, style=filled, fontname="Arial"];
+asia [label="asia\n    71.667" , fillcolor=orange    ];
+nombredegrafico  ->asia
+Japon [label="Japon\n    80.000" , fillcolor=red       ];
+asia->Japon
+China [label="China\n    95.000" , fillcolor=red       ];
+asia->China
+Korea [label="Korea\n    40.000" , fillcolor=green     ];
+asia->Korea
+America [label="America\n    55.000" , fillcolor=yellow    ];
+nombredegrafico  ->America
+Canadá [label="Canadá\n    65.000" , fillcolor=orange    ];
+America->Canadá
+Guatemala [label="Guatemala\n    40.000" , fillcolor=green     ];
+America->Guatemala
+Chile [label="Chile\n    60.000" , fillcolor=orange    ];
+America->Chile
+}
+
