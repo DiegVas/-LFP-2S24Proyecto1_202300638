@@ -140,7 +140,6 @@ do pos = 1 , num_continentes
    ! Sumar el valor redondeado a la saturación del continente
     graphFile%continents(pos)%saturation_Continent = graphFile%continents(pos)%saturation_Continent + graphFile%continents(pos)%countries(i)%saturation
   end do
-  print *, graphFile%continents(pos)%saturation_Continent
   ! Calcular la saturación promedio del continente
   graphFile%continents(pos)%saturation_Continent = graphFile%continents(pos)%saturation_Continent / size(graphFile%continents(pos)%countries)
 end do
@@ -269,7 +268,6 @@ end function eliminar_espacios
      saturacion_pais = real_to_char(saturacion_pais_real)
           do while (index(trim(dataFile%continents(i)%countries(j)%name), ' ') /= 0)
         dataFile%continents(i)%countries(j)%name = eliminar_espacios(trim(dataFile%continents(i)%countries(j)%name))
-        print *, dataFile%continents(i)%countries(j)%name
         
      end do
       dot_code = trim(dot_code) // trim(dataFile%continents(i)%countries(j)%name)// ' [label="' // trim(dataFile%continents(i)%countries(j)%name) // '\n' // saturacion_pais // '" , fillcolor=' // color //'];' // new_line('A')

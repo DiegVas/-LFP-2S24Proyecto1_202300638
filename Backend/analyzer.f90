@@ -105,9 +105,15 @@ program leer_archivo
                     ! ! Iniciar un número
                     state = 7
                     current_lexema = charLinea
-                else if (charLinea == char(32)) then
+                else if (charLinea == char(32) .OR. charLinea == " " .or. charLinea == char(9)) then
                     ! ! Ignorar espacios
-         
+                else 
+
+                    ! ? Caracter no reconocido
+                    descripcion = 'Caracter no reconocido'
+
+                    call add_error(error_Index, token_capacity, errors,charLinea, descripcion, linea_actual, columna_actual)
+                    error_count = error_count + 1
                 end if
 
             case (1) ! * Estado de identificador
@@ -125,10 +131,11 @@ program leer_archivo
                         else
                             lexema = 'Identificador no reconocido'
                             call add_error(error_Index, token_capacity, errors,trim(current_lexema),lexema, linea_actual, columna_actual)
+                            error_count = error_count + 1
                         end if
 
                         call save_token(token_Index, tokens, trim(lexema), current_lexema, linea_actual, columna_actual)
-                        ! print *, trim(lexema), ": ", current_lexema
+
 
                     ! ! Reiniciar el estado
                     state = 0
@@ -139,7 +146,7 @@ program leer_archivo
                 lexema = 'Simbolo'
                 call resize_tokens(token_Index, token_capacity, tokens)
                 call save_token(token_Index, tokens, trim(lexema), current_lexema, linea_actual, columna_actual)
-                ! print *, 'Simbolo: ', current_lexema
+
 
                 ! ! Reiniciar el estado
                 state = 0
@@ -152,7 +159,7 @@ program leer_archivo
                         current_lexema = trim(current_lexema) // charLinea
                     else
                         descripcion = 'Se esperaba un caracter de cadena'
-                        ! print *, "Error lexico: Se esperaba un caracter de cadena"
+
                         error_count = error_count + 1
                         call add_error(error_Index, token_capacity, errors,charLinea, descripcion, linea_actual, columna_actual)
                     end if
@@ -162,7 +169,7 @@ program leer_archivo
                     current_lexema = trim(current_lexema) // charLinea
                 else
                     current_lexema = trim(current_lexema) // charLinea
-                    ! print *, 'Cadena: ', current_lexema
+
                     ! ! Reiniciar el estado
                     state = 5
                 end if
@@ -183,7 +190,7 @@ program leer_archivo
                 lexema = 'Fin de instruccion'
                 call resize_tokens(token_Index, token_capacity, tokens)
                 call save_token(token_Index, tokens, trim(lexema), current_lexema, linea_actual, columna_actual)
-                ! print *, 'Fin de instruccion: ', current_lexema
+
                 k = k - 1  ! Retroceder un carácter para reevaluar
 
             case (7)
@@ -201,11 +208,11 @@ program leer_archivo
                             current_lexema = trim(current_lexema) // charLinea
                             call resize_tokens(token_Index, token_capacity, tokens)
                             call save_token(token_Index, tokens, trim(lexema), current_lexema, linea_actual, columna_actual)
-                            ! print *, trim(lexema), ": ", current_lexema
+
                             k = k + 1
                         else
                             descripcion = 'Se esperaba un numero menor a 100'
-                            ! print *, 'Error lexico: Se esperaba un numero menor a 100'
+
                             current_lexema = trim(current_lexema) // charLinea
                             call add_error(error_Index, token_capacity, errors,current_lexema, descripcion, linea_actual, columna_actual)
                             error_count = error_count + 1
@@ -217,10 +224,10 @@ program leer_archivo
                             lexema = 'Numero'
                             call resize_tokens(token_Index, token_capacity, tokens)
                             call save_token(token_Index, tokens, trim(lexema), current_lexema, linea_actual, columna_actual)
-                            ! print *, trim(lexema), ": ", current_lexema
+
                         else
                             descripcion = 'Se esperaba un numero'
-                            ! print *, 'Error lexico: ', descripcion
+
                             call add_error(error_Index, token_capacity, errors,charLinea, descripcion, linea_actual, columna_actual)
                             error_count = error_count + 1
                         end if

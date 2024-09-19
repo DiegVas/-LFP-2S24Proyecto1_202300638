@@ -6,7 +6,7 @@ from tkinter import messagebox
 class App:
 
     WIDTH = 1200
-    HEIGHT = 500
+    HEIGHT = 800
 
     def __init__(self, root):
         self.root = root
