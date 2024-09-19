@@ -247,9 +247,10 @@ end function eliminar_espacios
       color = "red"
     end if
      saturacion = real_to_char(saturacion_real)
-     print *, saturacion
-      dot_code = trim(dot_code) // trim(dataFile%continents(i)%name) // ' [label="' // trim(dataFile%continents(i)%name) // '\n' // saturacion // '" , fillcolor=' // color // '];' // new_line('A')
-      dot_code = trim(dot_code) // eliminar_espacios(trim(dataFile%name)) // "->" // trim(dataFile%continents(i)%name) // new_line('A')
+
+     dataFile%continents(i)%name = eliminar_espacios(trim(dataFile%continents(i)%name))
+      dot_code = trim(dot_code) // (eliminar_espacios(trim(dataFile%continents(i)%name))) // ' [label="' // trim(dataFile%continents(i)%name) // '\n' // saturacion // '" , fillcolor=' // color // '];' // new_line('A')
+      dot_code = trim(dot_code) // eliminar_espacios(trim(dataFile%name)) // " -> " // eliminar_espacios(trim(dataFile%continents(i)%name)) // new_line('A')
       do j = 1, num_paises
       saturacion_pais_real = dataFile%continents(i)%countries(j)%saturation
     if (dataFile%continents(i)%countries(j)%saturation < 15) then
@@ -266,8 +267,13 @@ end function eliminar_espacios
       color = "red"
     end if
      saturacion_pais = real_to_char(saturacion_pais_real)
+          do while (index(trim(dataFile%continents(i)%countries(j)%name), ' ') /= 0)
+        dataFile%continents(i)%countries(j)%name = eliminar_espacios(trim(dataFile%continents(i)%countries(j)%name))
+        print *, dataFile%continents(i)%countries(j)%name
+        
+     end do
       dot_code = trim(dot_code) // trim(dataFile%continents(i)%countries(j)%name)// ' [label="' // trim(dataFile%continents(i)%countries(j)%name) // '\n' // saturacion_pais // '" , fillcolor=' // color //'];' // new_line('A')
-      dot_code = trim(dot_code) // trim(dataFile%continents(i)%name) // "->" // trim(dataFile%continents(i)%countries(j)%name) // new_line('A')
+      dot_code = trim(dot_code) // eliminar_espacios(trim(dataFile%continents(i)%name)) // " -> " // eliminar_espacios(trim(dataFile%continents(i)%countries(j)%name)) // new_line('A')
       end do
     end do
     dot_code = trim(dot_code) // '}' // new_line('A')

@@ -107,12 +107,7 @@ program leer_archivo
                     current_lexema = charLinea
                 else if (charLinea == char(32)) then
                     ! ! Ignorar espacios
-                else
-                    ! ! Error de lexema
-                    ! print *, '- Error de lexema: ', charLinea
-                    descripcion = 'Caracter no reconocido'
-                    call add_error(error_Index,token_capacity, errors,trim(charLinea), descripcion, linea_actual, columna_actual)
-                    error_count = error_count + 1
+         
                 end if
 
             case (1) ! * Estado de identificador
@@ -128,7 +123,8 @@ program leer_archivo
                         if (any(current_lexema == reserved_words)) then
                             lexema = 'Palabra reservada'
                         else
-                            lexema = 'Identificador'
+                            lexema = 'Identificador no reconocido'
+                            call add_error(error_Index, token_capacity, errors,trim(current_lexema),lexema, linea_actual, columna_actual)
                         end if
 
                         call save_token(token_Index, tokens, trim(lexema), current_lexema, linea_actual, columna_actual)

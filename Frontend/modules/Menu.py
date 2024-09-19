@@ -22,7 +22,7 @@ def mostrar_contenido(frame):
     text_input = tk.Text(
         input_frame,
         height=10,
-        width=50,
+        width=100,
         highlightbackground="black",
         highlightthickness=1,
         padx=10,
