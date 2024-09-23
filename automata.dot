@@ -1,15 +1,19 @@
 digraph G {
 node [shape=box, style=filled, fontname="Arial"];
 AmericadelNorte [label="AmericadelNorte\n    61.000" , fillcolor=orange    ];
-Corto1  -> AmericadelNorte
+"Corto1"  -> AmericadelNorte
 Canada [label="Canada\n    75.000" , fillcolor=red       ];
 AmericadelNorte -> Canada
+Mexico [label="Mexico\n    35.000" , fillcolor=green     ];
+AmericadelNorte -> Mexico
+Estadosunidos [label="Estadosunidos\n    73.000" , fillcolor=orange    ];
+AmericadelNorte -> Estadosunidos
 AmericadelSur [label="AmericadelSur\n    99.000" , fillcolor=red       ];
-Corto1  -> AmericadelSur
+"Corto1"  -> AmericadelSur
 Caboverde [label="Caboverde\n    99.000" , fillcolor=red       ];
 AmericadelSur -> Caboverde
 Oceania [label="Oceania\n    74.000" , fillcolor=orange    ];
-Corto1  -> Oceania
+"Corto1"  -> Oceania
 Indonesia [label="Indonesia\n    74.000" , fillcolor=orange    ];
 Oceania -> Indonesia
 }

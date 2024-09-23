@@ -52,6 +52,7 @@ program leer_archivo
         if (iostat /= 0) exit
         contenido = trim(contenido) // trim(buffer) // char(10)
     end do
+    contenido = trim(contenido) // char(190)
 
 
 
@@ -107,6 +108,9 @@ program leer_archivo
                     current_lexema = charLinea
                 else if (charLinea == char(32) .OR. charLinea == " " .or. charLinea == char(9)) then
                     ! ! Ignorar espacios
+                else if (charLinea == char(190)) then
+                    ! ! Fin de la cadena
+                    exit
                 else 
 
                     ! ? Caracter no reconocido

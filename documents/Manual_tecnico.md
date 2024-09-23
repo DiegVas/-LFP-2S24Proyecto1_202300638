@@ -13,6 +13,12 @@ Este documento describe el funcionamiento del autómata implementado en Fortran 
 6. **Estado de Espacio** en Blanco (6): Este estado se activa cuando se detecta un espacio en blanco.
 7. **Estado de Error** (7): Este estado se activa cuando se detecta un carácter no reconocido.
 
+## Metodo del arbol
+
+Para generar el automata necesario para el analizador lexico del proyecto se utilizo el metodo del arbol generando el siguente arbol, siendo el siguiente.
+
+![Metodo del arbol](Arbol.png)
+
 ## Descripción del Código
 
 ### Estrucutura del codigo

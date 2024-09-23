@@ -33,7 +33,7 @@ contains
         do
           i = i + 1
             if (index(lineas(i), 'nombre:') > 0) then
-              call extraer_valor(lineas(i), graphFile%name)
+              call extraer_valorGra(lineas(i), graphFile%name)
               !print *, "Nombre de la gráfica: ", graphFile%name
               exit
             endif
@@ -175,6 +175,20 @@ end do
 
   end subroutine extraer_valor
 
+  subroutine extraer_valorGra(linea, valor)
+    character(len=*), intent(in) :: linea
+    character(len=*), intent(out) :: valor
+    integer :: pos
+
+    pos = index(linea, ':') + 1
+    valor = adjustl(trim(linea(pos:)))
+    ! Remover el punto y coma al final si existe
+    if (valor(len_trim(valor):len_trim(valor)) == ';') then
+      valor = valor(1:len_trim(valor)-1)
+    endif
+
+  end subroutine extraer_valorGra
+
   subroutine redimensionar_arreglo(arreglo, nuevo_tamano)
     type(Continent), dimension(:), allocatable :: arreglo
     integer, intent(in) :: nuevo_tamano
@@ -250,7 +264,7 @@ end function eliminar_espacios
      dataFile%continents(i)%name = eliminar_espacios(trim(dataFile%continents(i)%name))
       dot_code = trim(dot_code) // (eliminar_espacios(trim(dataFile%continents(i)%name))) // ' [label="' // trim(dataFile%continents(i)%name) // '\n' // saturacion // '" , fillcolor=' // color // '];' // new_line('A')
       dot_code = trim(dot_code) // eliminar_espacios(trim(dataFile%name)) // " -> " // eliminar_espacios(trim(dataFile%continents(i)%name)) // new_line('A')
-      do j = 1, num_paises
+      do j = 1, size(dataFile%continents(i)%countries)
       saturacion_pais_real = dataFile%continents(i)%countries(j)%saturation
     if (dataFile%continents(i)%countries(j)%saturation < 15) then
       color = "white"
